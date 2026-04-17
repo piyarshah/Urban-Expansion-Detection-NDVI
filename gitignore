@@ -1,0 +1,54 @@
+# ─── Virtual environment ───────────────────────────────────────────────────
+ndvi/
+venv/
+.venv/
+env/
+
+# ─── Pipeline outputs (generated, not source) ──────────────────────────────
+outputs/
+# Uncomment the line below to track outputs in git (not recommended for large rasters)
+# !outputs/tables/
+# !outputs/logs/
+
+# ─── Raw data (large binary files — store separately) ──────────────────────
+data/raw/
+# Keep the AOI file tracked
+!data/aoi/
+
+# ─── Python cache ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.pytest_cache/
+
+# ─── Jupyter ───────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── macOS ─────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ─── IDEs ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Distribution / packaging ──────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+
+# ─── Environment files ─────────────────────────────────────────────────────
+.env
+.env.*
+
+# ─── Large binary outputs ──────────────────────────────────────────────────
+*.tif
+*.tiff
+*.joblib
+*.pkl

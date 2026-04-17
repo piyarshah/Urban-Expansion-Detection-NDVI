@@ -1,2 +1,186 @@
-# Urban-Expansion-Detection-NDVI
-Geospatial machine learning pipeline to detect and quantify urban expansion in Surat (India) using multi-temporal Landsat imagery. Implements NDVI/NDBI-based weak supervision, Random Forest classification, confidence-filtered change detection, and directional growth analysis. 
+# NDVI Urban Expansion — Surat, India (2000–2024)
+
+A reproducible geospatial machine learning pipeline for detecting and quantifying urban land cover change in Surat, Gujarat using multi-temporal Landsat satellite imagery. The pipeline runs from raw GeoTIFF scenes through radiometric correction, cloud masking, spectral index computation, supervised classification, change detection, and publication-ready visualisation — entirely in Python.
+
+---
+
+## Overview
+
+| Item | Detail |
+|---|---|
+| Study area | Surat, Gujarat, India |
+| Sensor | Landsat 5 TM (2000), Landsat 8 OLI (2013, 2024) |
+| Product | USGS Collection 2 Level-2 Surface Reflectance |
+| Tile | WRS-2 Path 148 / Row 045 |
+| Resolution | 30 m |
+| Classes | vegetation, built-up, other |
+| Model | Random Forest (300 trees) |
+| Change period | 2013 → 2024 |
+
+---
+
+## Pipeline
+
+The pipeline runs sequentially through 17 stages grouped into logical phases.
+
+### Phase 1 — Data Preparation (S2–S6)
+
+| Stage | Module | Description |
+|---|---|---|
+| S2 | `data_loading.py` | Load raw band TIFs into NumPy arrays |
+| S3 | `preprocessing.py` | Radiometric scaling: `DN × 0.0000275 − 0.2` |
+| S4 | `preprocessing.py` | QA_PIXEL bitmask masking (bits 3, 4: cloud, shadow) |
+| S5 | `preprocessing.py` | Clip to Surat AOI boundary |
+| S6 | `preprocessing.py` | Reproject and align all scenes to 2013 reference grid |
+
+### Phase 2 — Feature Engineering (S7–S8)
+
+| Stage | Module | Description |
+|---|---|---|
+| S7 | `features.py` | Compute NDVI (clipped to [−1, 1]) and NDBI per scene |
+| S8 | `features.py` | Stack `[red, nir, swir1]` into `(N_pixels, 3)` feature matrix |
+
+> **Note:** Raw bands `[red, nir, swir1]` are used as model features rather than derived indices. Labels are generated from NDVI/NDBI thresholds separately — using the indices as both label generators and model features produces circular supervision (100% validation accuracy) with no generalisation.
+
+### Phase 3 — Supervised Classification (S9–S12)
+
+| Stage | Module | Description |
+|---|---|---|
+| S9 | `labels.py` | Rule-based proxy labels from NDVI/NDBI thresholds |
+| S10 | `training.py` | Stratified balanced sampling (N per class = min class count) |
+| S11 | `model.py` | Train Random Forest with 80/20 stratified validation split |
+| S12 | `model.py` | Full-raster prediction with class probabilities |
+
+### Phase 4 — Change Analysis (S13–S15)
+
+| Stage | Module | Description |
+|---|---|---|
+| S13 | `change_detection.py` | Confidence-gated pixel-wise transition detection |
+| S14 | `quantification.py` | Transition area in km² |
+| S15 | `directional.py` | 8-direction growth binning from AOI centroid |
+
+### Phase 5 — Output (S16–S17)
+
+| Stage | Module | Description |
+|---|---|---|
+| S16 | `visualisation.py` | Six publication-ready matplotlib figures |
+| S17 | `export.py` | GeoTIFFs, CSVs, PNGs, run log |
+
+---
+
+## Folder Structure
+
+```
+ndvi-urban-expansion/
+│
+├── src/                          # All Python source modules
+│   ├── __init__.py
+│   ├── run_pipeline.py           # Entry point — runs S2–S17
+│   ├── config.py                 # Hyperparameters, seeds, thresholds (edit here)
+│   ├── data_loading.py           # S2 — raw scene loading
+│   ├── preprocessing.py          # S3–S6 — scaling, masking, clipping, alignment
+│   ├── features.py               # S7–S8 — spectral indices, feature stacking
+│   ├── labels.py                 # S9 — proxy label generation
+│   ├── training.py               # S10 — stratified dataset construction
+│   ├── model.py                  # S11–S12 — RF training + full-raster prediction
+│   ├── evaluation.py             # Classification metrics and reporting
+│   ├── io_model.py               # Model serialisation (joblib)
+│   ├── change_detection.py       # S13 — confidence-aware change detection
+│   ├── quantification.py         # S14 — transition area quantification
+│   ├── directional.py            # S15 — directional urban growth analysis
+│   ├── visualisation.py          # S16 — matplotlib figure generation
+│   ├── export.py                 # S17 — save rasters, tables, figures
+│   └── logger.py                 # File-based pipeline logger
+│
+├── data/
+│   ├── aoi/
+│   │   └── surat_aoi_simple.geojson
+│   └── raw/
+│       ├── LC08_L2SP_148045_20131103_*/   # Landsat 8 — 2013
+│       ├── LC08_L2SP_148045_20241117_*/   # Landsat 8 — 2024
+│       └── LT05_L2SP_148045_20000217_*/   # Landsat 5 — 2000
+│
+├── outputs/                      # Generated by the pipeline (git-ignored)
+│   ├── rasters/                  # classified_2013.tif, classified_2024.tif, change_map.tif
+│   ├── figures/                  # PNG maps and charts at 300 dpi
+│   ├── tables/                   # transition_matrix.csv, directional.csv
+│   ├── logs/                     # run.log
+│   └── rf_model.joblib           # Serialised Random Forest
+│
+├── ndvi/                         # Python virtual environment (git-ignored)
+├── README.md
+├── METHODOLOGY.md
+├── OUTPUT_GUIDE.md
+└── requirements.txt
+```
+
+---
+
+## Dependencies
+
+Requires Python 3.10+. All dependencies are pinned in `requirements.txt`.
+
+```
+rasterio==1.5.0
+numpy==2.4.4
+geopandas==1.1.3
+shapely==2.1.2
+scikit-learn==1.8.0
+matplotlib==3.10.8
+pandas==3.0.2
+joblib==1.5.3
+pyproj==3.7.2
+affine==2.4.0
+```
+
+---
+
+## Setup
+
+```bash
+# Clone and enter the project
+git clone <repo-url>
+cd ndvi-urban-expansion
+
+# Create and activate the virtual environment
+python3 -m venv ndvi
+source ndvi/bin/activate       # macOS / Linux
+# ndvi\Scripts\activate        # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the full pipeline
+python3 -m src.run_pipeline
+```
+
+The pipeline takes approximately 10–20 minutes end to end depending on hardware, dominated by S11 (RF training, ~5–8 min with n_jobs=-1) and S12 (full-raster prediction for 3 × 18.5M pixels).
+
+---
+
+## Configuration
+
+All tunable parameters live in `src/config.py`. The most important ones:
+
+| Parameter | Value | Effect |
+|---|---|---|
+| `CONFIDENCE_THRESHOLD` | 0.60 | Minimum predicted-class probability to include a pixel in change detection |
+| `RF_PARAMS["n_estimators"]` | 300 | Number of trees |
+| `RF_PARAMS["max_depth"]` | 20 | Maximum tree depth |
+| `RF_PARAMS["min_samples_leaf"]` | 10 | Minimum samples per leaf |
+| `RANDOM_SEED` | 42 | Global seed for splits and sampling |
+| `VAL_SPLIT` | 0.20 | Validation fraction |
+
+Label thresholds live in `src/labels.py` under `THRESHOLDS`. These must be identical across all years for valid change detection.
+
+---
+
+## Notes
+
+**Sensor cross-calibration.** Landsat 5 TM and Landsat 8 OLI have different spectral response functions. Both use USGS Collection 2 Level-2 SR, which applies sensor-specific atmospheric correction, making the reflectance values physically comparable. However, residual inter-sensor differences in NDVI and NDBI are expected and should be interpreted with caution in 2000–2013 comparisons.
+
+**Proxy label quality.** Labels are generated from hard spectral thresholds, not field surveys. The Random Forest generalises beyond these thresholds using raw reflectance — this is intentional — but the absolute class boundaries remain defined by the thresholds in `labels.py`. Validation accuracy (typically 85–95%) reflects how well raw bands approximate the threshold-defined boundaries, not real-world classification accuracy.
+
+**Cloud masking coverage.** The 2000 Landsat 5 scene has slightly higher cloud/shadow coverage (~36%) than the 2013 and 2024 scenes (~36%). Pixels masked as invalid in any year propagate to invalid in the change map.
+
+**Coordinate system.** All raster operations use EPSG:32643 (UTM Zone 43N). The AOI GeoJSON is reprojected automatically if it is in a different CRS.
