@@ -1,0 +1,16 @@
+2026-04-17 16:53:51 | INFO     | ============================================================
+2026-04-17 16:53:51 | INFO     | Pipeline run started  2026-04-17 16:53:51
+2026-04-17 16:53:51 | INFO     | ============================================================
+2026-04-17 16:53:51 | INFO     | --- Configuration ---
+2026-04-17 16:53:51 | INFO     |   confidence_threshold           0.6
+2026-04-17 16:53:51 | INFO     |   n_estimators                   300
+2026-04-17 16:53:51 | INFO     |   max_depth                      20
+2026-04-17 16:53:51 | INFO     |   min_samples_leaf               10
+2026-04-17 16:53:51 | INFO     |   random_seed                    42
+2026-04-17 16:58:51 | INFO     | [S12] Full-raster classification complete  |  valid_2013=11894317  valid_2024=11894120
+2026-04-17 16:58:52 | INFO     | [S13] Change detection complete  |  new_built_up_pixels=127745
+2026-04-17 16:58:52 | INFO     | [S14] Quantification complete  |  total_growth_km2=114.9705
+2026-04-17 16:58:52 | INFO     | [S15] Directional analysis complete  |  dominant_direction=NW  total_growth_km2=114.9705
+2026-04-17 16:58:54 | INFO     | [S16] Visualisation complete  |  figures=6
+2026-04-17 16:59:00 | INFO     | [S17] All outputs exported  |  rasters=/Users/piyashah/Downloads/ndvi-urban-expansion/outputs/rasters  figures=/Users/piyashah/Downloads/ndvi-urban-expansion/outputs/figures  tables=/Users/piyashah/Downloads/ndvi-urban-expansion/outputs/tables
+2026-04-17 16:59:00 | INFO     | Pipeline finished successfully.
